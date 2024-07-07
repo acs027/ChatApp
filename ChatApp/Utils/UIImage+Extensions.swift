@@ -17,7 +17,7 @@ extension UIImage {
         let posX = (cgImage.width - imgSize) / 2
         let posY = (cgImage.height - imgSize) / 2
         
-        let scale = CGFloat(1024.0/Double(imgSize))
+        let scale = CGFloat(Double(desiredSize)/Double(imgSize))
         
         let cropRect = CGRect(x: posX, y: posY, width: imgSize, height: imgSize) // Define the cropping rectangle
         guard let croppedCGImage = cgImage.cropping(to: cropRect) else { return nil }
@@ -35,5 +35,5 @@ extension UIImage {
         }
         
         return scaledImg
-    }
+      }
 }

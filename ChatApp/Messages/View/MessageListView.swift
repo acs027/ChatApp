@@ -8,95 +8,66 @@
 import SwiftUI
 
 struct MessageListView: View {
-    @StateObject var viewModel = MessageViewModel()
-    @State var selectedUser = AppUser.empty
-    
-    @State var showingMessages = false
-    @State var showingContacts = false
-    @State var showingUsers = false
+    @ObservedObject var viewModel: MessageViewModel
     
     var body: some View {
-        VStack{
-            if !viewModel.dataReady.allSatisfy({$0}) {
-                ProgressView()
-            }
-            else {
-                ZStack {
-                    ScrollView(showsIndicators: false){
-                        VStack {
-                            ForEach(viewModel.messagedUsers, id:\.userId) { user in
+        VStack {
+            ScrollView(showsIndicators: false){
+                VStack {
+                    ForEach(viewModel.messagedUsers, id:\.userId) { user in
+                        HStack {
+                            UserAvatar(user: user, size: 50)
+                            LastMessageView(input: viewModel.findLastMessage(selectedUser: user), user: user, badgeNumber: viewModel.getUnseenMessages(selectedUser: user).count)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            viewModel.selectedUser = user
+                            viewModel.viewPath.append(.messages)
+                        }
+                        .contextMenu(ContextMenu(menuItems: {
+                            Button(role: .destructive) {
+                                viewModel.removeMessages(selectedUser: user)
+                            } label: {
                                 HStack {
-                                    UserAvatar(user: user, size: 50)
-                                    
-                                    VStack {
-                                        HStack{
-                                            Text(user.displayName.capitalized)
-                                                .bold()
-                                                .frame(maxWidth: .infinity, alignment: .leading)
-                                            UnseenMessagesBadge(badgeNumber: viewModel.getUnseenMessages(selectedUser: user).count)
-                                        }
-                                        LastMessageView(input: viewModel.findLastMessage(selectedUser: user))
-                                    }
-                                }
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 50)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    selectedUser = user
-                                    showingMessages.toggle()
+                                    Text("Delete Messages")
+                                    Image(systemName: "trash")
                                 }
                             }
-                        }
-                        .frame(maxHeight: .infinity, alignment: .topLeading)
+                        }))
                     }
-                    
-                    Button {
-                        showingContacts.toggle()
-                    } label: {
-                        Image(systemName: "paperplane.circle.fill")
-                            .font(.largeTitle)
-                            .imageScale(.large)
-                    }
-                    
-                    .padding()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
                 }
+//                .frame(maxHeight: .infinity, alignment: .topLeading)
+            }            
+            Button {
+                viewModel.viewPath.append(.contacts)
+            } label: {
+                Image(systemName: "paperplane.circle.fill")
+                    .font(.largeTitle)
+                    .imageScale(.large)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
         }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Text("ChatApp")
-                    .bold()
                     .font(.largeTitle)
+                    .bold()
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    showingUsers.toggle()
+                    viewModel.viewPath.append(.users)
                 } label: {
                     Image(systemName: "person.2.fill")
                 }
-                .sheet(isPresented: $showingUsers) {
-                    UsersView()
-                        .environmentObject(viewModel)
-                }
             }
         }
-        .navigationDestination(isPresented: $showingMessages) {
-            MessagesView(selectedUser: selectedUser, showingMessages: $showingMessages)
-                .environmentObject(viewModel)
-        }
-        .navigationDestination(isPresented: $showingContacts) {
-            ContactsView(showingContacs: $showingContacts)
-                .environmentObject(viewModel)
-        }
-        .foregroundStyle(.primary)
-        .toolbarBackground(.visible, for: .automatic)
-        .toolbarBackground(.green1, for: .automatic)
-        
     }
 }
 
 #Preview {
-    MessageListView()
+    NavigationStack {
+        MessageListView(viewModel: MessageViewModel(test: true))
+    }
 }

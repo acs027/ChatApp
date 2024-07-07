@@ -9,14 +9,36 @@ import SwiftUI
 
 
 struct ContentView: View {
+    @StateObject var viewModel = MessageViewModel()
+    
     var body: some View {
-            VStack {
-                MessageListView()
+        NavigationStack(path: $viewModel.viewPath) {
+            if viewModel.dataStatus["ready"]! {
+                MessageListView(viewModel: viewModel)
+                    .navigationDestination(for: AppView.self) { view in
+                        switch view {
+                        case .users:
+                            UsersView(viewModel: viewModel)
+                        case .contacts:
+                            ContactsView(viewModel: viewModel)
+                        case .messages:
+                            MessagesView(viewModel: viewModel)
+                        }
+                    }
+            } else {
+                Spacer()
+                ProgressView()
+                Spacer()
             }
-            .padding()
+        }
+        .padding()
+        .toolbarBackground(.visible, for: .automatic)
+        .toolbarBackground(.green1, for: .automatic)
+        .foregroundStyle(.primary)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 #Preview {
-    ContentView()
+    ContentView(viewModel: MessageViewModel(test: true))
 }

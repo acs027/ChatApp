@@ -16,14 +16,13 @@
 		081A9B502BD6A2D100A22F1F /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 081A9B4F2BD6A2D100A22F1F /* LoginView.swift */; };
 		081A9B522BD6A74600A22F1F /* SignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 081A9B512BD6A74600A22F1F /* SignupView.swift */; };
 		081A9B542BD6A7FA00A22F1F /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 081A9B532BD6A7FA00A22F1F /* UserProfileView.swift */; };
-		084BB7AF2C0A12C600047718 /* CropAndResizeImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 084BB7AE2C0A12C500047718 /* CropAndResizeImage.swift */; };
+		084BB7AF2C0A12C600047718 /* UIImage+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 084BB7AE2C0A12C500047718 /* UIImage+Extensions.swift */; };
 		085995EB2BE3E6E60012205C /* ContactsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 085995EA2BE3E6E60012205C /* ContactsView.swift */; };
 		086DF5702BD93D020096092C /* MessageViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086DF56F2BD93D020096092C /* MessageViewModel.swift */; };
 		086DF5732BD93DB30096092C /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086DF5722BD93DB30096092C /* Message.swift */; };
 		086DF5762BD942140096092C /* MessagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 086DF5752BD942140096092C /* MessagesView.swift */; };
 		08A5C7E82BED9D950013ACDC /* MessageListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08A5C7E72BED9D950013ACDC /* MessageListView.swift */; };
 		08B5F1062C108D5600F435D3 /* UserAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08B5F1052C108D5600F435D3 /* UserAvatar.swift */; };
-		08B5F1082C108D8D00F435D3 /* UnseenMessagesBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08B5F1072C108D8D00F435D3 /* UnseenMessagesBadge.swift */; };
 		08B5F10A2C108DD400F435D3 /* LastMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08B5F1092C108DD400F435D3 /* LastMessageView.swift */; };
 		08C19E3F2BFDD10700ECCC5E /* AppUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08C19E3E2BFDD10700ECCC5E /* AppUser.swift */; };
 		08D0A2D82BE2B13A0033C4CA /* UsersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08D0A2D72BE2B13A0033C4CA /* UsersView.swift */; };
@@ -47,14 +46,13 @@
 		081A9B512BD6A74600A22F1F /* SignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupView.swift; sourceTree = "<group>"; };
 		081A9B532BD6A7FA00A22F1F /* UserProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileView.swift; sourceTree = "<group>"; };
 		081A9B552BD6AD5200A22F1F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		084BB7AE2C0A12C500047718 /* CropAndResizeImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CropAndResizeImage.swift; sourceTree = "<group>"; };
+		084BB7AE2C0A12C500047718 /* UIImage+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+Extensions.swift"; sourceTree = "<group>"; };
 		085995EA2BE3E6E60012205C /* ContactsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsView.swift; sourceTree = "<group>"; };
 		086DF56F2BD93D020096092C /* MessageViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageViewModel.swift; sourceTree = "<group>"; };
 		086DF5722BD93DB30096092C /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
 		086DF5752BD942140096092C /* MessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesView.swift; sourceTree = "<group>"; };
 		08A5C7E72BED9D950013ACDC /* MessageListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageListView.swift; sourceTree = "<group>"; };
 		08B5F1052C108D5600F435D3 /* UserAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAvatar.swift; sourceTree = "<group>"; };
-		08B5F1072C108D8D00F435D3 /* UnseenMessagesBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnseenMessagesBadge.swift; sourceTree = "<group>"; };
 		08B5F1092C108DD400F435D3 /* LastMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LastMessageView.swift; sourceTree = "<group>"; };
 		08C19E3E2BFDD10700ECCC5E /* AppUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUser.swift; sourceTree = "<group>"; };
 		08D0A2D72BE2B13A0033C4CA /* UsersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsersView.swift; sourceTree = "<group>"; };
@@ -101,7 +99,7 @@
 		084BB7AD2C0A129800047718 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				084BB7AE2C0A12C500047718 /* CropAndResizeImage.swift */,
+				084BB7AE2C0A12C500047718 /* UIImage+Extensions.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -149,7 +147,6 @@
 			isa = PBXGroup;
 			children = (
 				08B5F1052C108D5600F435D3 /* UserAvatar.swift */,
-				08B5F1072C108D8D00F435D3 /* UnseenMessagesBadge.swift */,
 				08B5F1092C108DD400F435D3 /* LastMessageView.swift */,
 			);
 			path = CustomViews;
@@ -294,11 +291,10 @@
 				08A5C7E82BED9D950013ACDC /* MessageListView.swift in Sources */,
 				086DF5732BD93DB30096092C /* Message.swift in Sources */,
 				08FC22EB2BD151C800C37841 /* ChatAppApp.swift in Sources */,
-				08B5F1082C108D8D00F435D3 /* UnseenMessagesBadge.swift in Sources */,
 				085995EB2BE3E6E60012205C /* ContactsView.swift in Sources */,
 				081A9B4E2BD6A1AE00A22F1F /* AuthenticationView.swift in Sources */,
 				08D0A2D82BE2B13A0033C4CA /* UsersView.swift in Sources */,
-				084BB7AF2C0A12C600047718 /* CropAndResizeImage.swift in Sources */,
+				084BB7AF2C0A12C600047718 /* UIImage+Extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

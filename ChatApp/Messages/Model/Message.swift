@@ -21,3 +21,12 @@ extension Message {
         Message(receiver: "bcs", content: "", timestamp: Date(), seen: false, userId: "")
     }
 }
+
+extension Message {
+    static var mock_One: Message {
+        Message(receiver: "acs", content: "Merhaba aCs", timestamp: Date(), seen: true, userId: "eken")
+    }
+    static var mock_Two: Message {
+        Message(receiver: "eken", content: "Merhaba Eken", timestamp: Date(), seen: true, userId: "acs")
+    }
+}
