@@ -8,9 +8,7 @@
 import SwiftUI
 
 struct UsersView: View {
-    @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var viewModel: MessageViewModel
-    
+    @ObservedObject var viewModel: MessageViewModel
     @State private var searchString = ""
     
     private var users: [AppUser] {
@@ -18,53 +16,62 @@ struct UsersView: View {
     }
     
     var body: some View {
-        Button{
-            dismiss()
-        } label: {
-            HStack{
-                Image(systemName: "arrowshape.down.fill")
-                Text("Back")
-                Image(systemName: "arrowshape.down.fill")
+        VStack {
+            ZStack{
+                RoundedRectangle(cornerRadius: 100.0)
+                    .fill(.secondary)  
+                HStack{
+                    Image(systemName: "magnifyingglass")
+                    TextField("", text: $searchString)
+                }
+                .padding()
             }
-        }
-        
-        
-        ZStack{
-            RoundedRectangle(cornerRadius: 100.0)
-                .fill(.secondary)  
-            HStack{
-                Image(systemName: "magnifyingglass")
-                TextField("", text: $searchString)
-            }
+            .frame(height: 20)
             .padding()
-        }
-        .frame(height: 20)
-        .padding()
-        
-        
-        ScrollView(showsIndicators: false){
-            ForEach(users, id:\.userId) { user in
-                HStack {
-                    UserAvatar(user: user, size: 50)
-                    VStack {
+            
+            ScrollView(showsIndicators: false){
+                ForEach(users, id:\.userId) { user in
+                    HStack {
+                        UserAvatar(user: user, size: 50)
                         Text(user.displayName.capitalized)
                             .bold()
                             .frame(maxWidth: .infinity, alignment: .leading)
+                        Image(systemName: "person.2.fill")
+                            .foregroundStyle(.green1)
+                            .opacity(viewModel.currentUser.contactList.contains(user.userId) ? 1 : 0)
                     }
-                }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    viewModel.addToContacts(userId: user.userId)
-                    dismiss()
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        viewModel.addToContacts(userId: user.userId)
+                        viewModel.viewPath.removeLast()
+                    }
                 }
             }
         }
+        .padding(.vertical)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    viewModel.viewPath.removeLast()
+                } label: {
+                    Image(systemName: "chevron.left")
+                }
+                .foregroundStyle(.primary)
+            }
+        }
+        .navigationBarBackButtonHidden()
+        .navigationTitle("Users")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.visible, for: .automatic)
+        .toolbarBackground(.green1, for: .automatic)
     }
 }
 
-//#Preview {
-//    UsersView()
-//}
+#Preview {
+    NavigationStack {
+        UsersView(viewModel: MessageViewModel(test: true))
+    }
+}

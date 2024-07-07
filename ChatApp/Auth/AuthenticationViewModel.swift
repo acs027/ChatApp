@@ -25,7 +25,7 @@ enum AuthenticationFlow {
 }
 
 @MainActor
-class AuthenticationViewModel: ObservableObject {
+final class AuthenticationViewModel: ObservableObject {
     @Published var email: String = ""
     @Published var password: String = ""
     @Published var confirmPassword: String = ""
@@ -216,26 +216,21 @@ extension AuthenticationViewModel {
     
     func uploadProfilePhoto(data: Data) {
         guard let uid = user?.uid else { return }
-        guard let cropAndResize = UIImage(data: data)?.cropAndResize(to: 1024) else { return }
-        let imgData = cropAndResize.jpegData(compressionQuality: 1.0)
+        guard let cropAndResize = UIImage(data: data)?.cropAndResize(to: 720) else { return }
+        let imgData = cropAndResize.jpegData(compressionQuality: 0.5)
         let storage = Storage.storage()
         let storageRef = storage.reference()
         
         let profilePhotoRef = storageRef.child("images/\(uid).jpg")
 
-        // Upload the file to the path "images/rivers.jpg"
         let _ = profilePhotoRef.putData(imgData!, metadata: nil) { (metadata, error) in
           guard let metadata = metadata else {
-            // Uh-oh, an error occurred!
               print("Error occured")
             return
           }
-          // Metadata contains file metadata such as size, content-type.
           let _ = metadata.size
-          // You can also access to download URL after upload.
             profilePhotoRef.downloadURL { (url, error) in
             guard let downloadURL = url else {
-              // Uh-oh, an error occurred!
                 print("Error occurred!")
               return
             }

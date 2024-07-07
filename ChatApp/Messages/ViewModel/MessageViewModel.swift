@@ -14,20 +14,27 @@ import FirebaseFirestoreSwift
 import FirebaseStorage
 
 @MainActor
-class MessageViewModel: ObservableObject {
+final class MessageViewModel: ObservableObject {
     @Published var message = Message.empty
-    @Published var messages = [Message]()
+    @Published var messages = [Message]() 
+    {
+        didSet {
+            self.getMessagedUsers()
+        }
+    }
     @Published var currentUser = AppUser.empty
-//    @Published var allContacts = [AppUser]()
     @Published var allUsers = [AppUser]()
     
     @Published var messagedUsers = [AppUser]()
     
-    @Published var dataReady = [false, false, false] {
+    @Published var selectedUser: AppUser = .empty
+    @Published var viewPath: [AppView] = []
+    
+    @Published var dataStatus = ["users": false, "messages": false, "ready": false] {
         didSet {
-            if dataReady[0] && dataReady[1] && !dataReady[2] {
-                self.getMessagedUsers()
-                self.dataReady[2] = true
+            if dataStatus["users"]! && dataStatus["messages"]! && !dataStatus["ready"]! {
+                getMessagedUsers()
+                dataStatus["ready"] = true
             }
         }
     }
@@ -35,7 +42,7 @@ class MessageViewModel: ObservableObject {
     @Published var user: User?
     private var db = Firestore.firestore()
     private var cancellables = Set<AnyCancellable>()
-    
+        
     init() {
         registerAuthStateHandler()
         
@@ -44,6 +51,17 @@ class MessageViewModel: ObservableObject {
             .sink { user in
                 self.message.userId = user.uid }
             .store(in: &cancellables)
+    }
+    
+    init(test: Bool) {
+        if test {
+            self.messages = [Message.mock_One, Message.mock_Two]
+            self.allUsers = [AppUser.mock_One, AppUser.mock_Two]
+            self.messagedUsers = [AppUser.mock_Two]
+            self.currentUser = AppUser.mock_One
+            self.selectedUser = AppUser.mock_Two
+            self.dataStatus["ready"] = true
+        }
     }
     
     private var authStateHandler: AuthStateDidChangeListenerHandle?
@@ -59,35 +77,12 @@ class MessageViewModel: ObservableObject {
         }
     }
     
-    func getUser() {
-        
-        guard let uid = user?.uid else { return }
-        let docRef = db.collection("users").document(uid)
-        docRef.getDocument { (document, error) in
-            if let document = document, document.exists {
-                do {
-                    self.currentUser = try document.data(as: AppUser.self)
-                } catch {
-                    print(error.localizedDescription)
-                }
-            }
-        }
-    }
-    
-    func addToContacts(userId: String) {
-        guard let uid = user?.uid else { return }
-        if !self.currentUser.contactList.contains(userId) {
-            self.currentUser.contactList.append(userId)
-            db.collection("users").document(uid).updateData(["contactList" : self.currentUser.contactList])
-        }
-    }
-    
     func fetchAllUsers() {
         db.collection("users").getDocuments { (snapshot, error) in
             guard let documents = snapshot?.documents else {
                 return
             }
-            self.allUsers = documents.compactMap { document -> AppUser? in
+            let allUsers = documents.compactMap { document -> AppUser? in
                 do{
                     return try document.data(as: AppUser.self)
                 }
@@ -96,22 +91,14 @@ class MessageViewModel: ObservableObject {
                     return nil
                 }
             }
-            self.dataReady[1] = true
+            self.allUsers = allUsers.sorted { $0.displayName.lowercased() < $1.displayName.lowercased() }
+            self.dataStatus["users"] = true
         }
-    }
-    
-    func findLastMessage(selectedUser: AppUser) -> (Message, String) {
-        guard let lastMessage = self.messages.last(where: {$0.receiver == selectedUser.userId || $0.userId == selectedUser.userId})
-        else { return (Message.empty, "")}
-        let timestamp = self.relativeDate(date: lastMessage.timestamp)
-        return (lastMessage, timestamp)
     }
     
     func fetchAllMessages() {
         guard let uid = user?.uid else { return }
-        
         db.collection("messages").document(uid).collection(uid).addSnapshotListener { (snapshot, error) in
-            self.messages.removeAll()
             guard let documents = snapshot?.documents else { return }
             self.messages = documents.compactMap { document -> Message? in
                 do {
@@ -125,25 +112,83 @@ class MessageViewModel: ObservableObject {
             self.messages.sort {
                 $0.timestamp < $1.timestamp
             }
-            self.dataReady[0] = true
-            self.getMessagedUsers()
+            self.dataStatus["messages"] = true
+        }
+    }
+    
+    func removeMessages(selectedUser: AppUser) {
+        guard let uid = user?.uid else { return }
+        for message in self.messages {
+            if [uid, selectedUser.userId].allSatisfy([message.receiver, message.userId].contains) {
+                self.db.collection("messages").document(uid).collection(uid).document(message.id.uuidString).delete()
+                self.db.collection("messages").document(selectedUser.userId).collection(selectedUser.userId).document(message.id.uuidString).delete()
+            }
+        }
+    }
+    
+    func getUser() {
+        guard let uid = user?.uid else { return }
+        let docRef = db.collection("users").document(uid)
+        docRef.getDocument { (document, error) in
+            if let document = document, document.exists {
+                do {
+                    self.currentUser = try document.data(as: AppUser.self)
+                } catch {
+                    print(error.localizedDescription)
+                }
+            }
         }
     }
     
     func getMessagedUsers() {
         var userIds = [String]()
         self.messages.reversed().forEach { message in
-            if message.receiver != self.user?.uid && !userIds.contains(message.receiver) {
-                userIds.append(message.receiver)
-            } else if message.userId != self.user?.uid && !userIds.contains(message.userId) {
-                userIds.append(message.userId)
+            if let personId = [message.userId, message.receiver].first(where: { $0 != user?.uid }) {
+                if !userIds.contains(personId) {
+                    userIds.append(personId)
+                }
             }
         }
         self.messagedUsers = userIds.compactMap{ user -> AppUser? in
-                return self.allUsers.first(where: {$0.userId == user})
+            return self.allUsers.first(where: {$0.userId == user})
         }
     }
     
+    func getContacts() -> [AppUser] {
+        return self.currentUser.contactList.compactMap { user in
+            self.allUsers.first(where: { $0.userId == user })
+        }
+    }
+    
+    func getSeenMessages(selectedUser: AppUser) -> [Message] {
+        let seenMessages = self.messages.filter {
+            selectedUser.userId == $0.receiver || (selectedUser.userId == $0.userId && $0.seen == true)
+        }
+        return seenMessages
+    }
+    
+    func getUnseenMessages(selectedUser: AppUser) -> [Message] {
+        let unseenMessages = self.messages.filter {
+            $0.userId == selectedUser.userId && $0.seen == false
+        }
+        return unseenMessages
+    }
+    
+    func addToContacts(userId: String) {
+        guard let uid = user?.uid else { return }
+        if !self.currentUser.contactList.contains(userId) {
+            self.currentUser.contactList.append(userId)
+            db.collection("users").document(uid).updateData(["contactList" : self.currentUser.contactList])
+        }
+    }
+    
+    func findLastMessage(selectedUser: AppUser) -> (Message, String) {
+        guard let lastMessage = self.messages.last(where: {$0.receiver == selectedUser.userId || $0.userId == selectedUser.userId})
+        else { return (Message.empty, "")}
+        let timestamp = self.relativeDate(date: lastMessage.timestamp)
+        return (lastMessage, timestamp)
+    }
+            
     func relativeDate(date: Date) -> String {
         let relativeDateFormatter = DateFormatter()
         relativeDateFormatter.timeStyle = .none
@@ -161,6 +206,14 @@ class MessageViewModel: ObservableObject {
         return relativeDate
     }
     
+    func messageTime(date: Date) -> String {
+        let messageTimeFormatter = DateFormatter()
+        messageTimeFormatter.timeStyle = .short
+        messageTimeFormatter.dateStyle = .none
+        messageTimeFormatter.locale = Locale(identifier: "en_GB")
+        return messageTimeFormatter.string(from: date)
+    }
+    
     func filterUsers(searchString: String) -> [AppUser] {
         guard let uid = user?.uid else { return []}
         if searchString.count < 1 {
@@ -169,6 +222,13 @@ class MessageViewModel: ObservableObject {
         return self.allUsers.filter{ $0.displayName.lowercased().contains(searchString.lowercased()) && $0.userId != uid}
     }
     
+    func filterContacts(searchString: String, contacts: [AppUser]) -> [AppUser] {
+        if searchString.count < 1 {
+            return contacts
+        }
+        return contacts.filter { $0.displayName.lowercased().contains(searchString.lowercased()) }
+    }
+        
     func saveMessage(receiverId: String) {
         self.message.id = UUID()
         if let user {
@@ -184,40 +244,23 @@ class MessageViewModel: ObservableObject {
             self.message.content = ""
         }
         catch {
-            print("save message")
             print(error.localizedDescription)
         }
     }
     
-    func getSeenMessages(selectedUser: AppUser) -> [Message] {
-        let seenMessages = self.messages.filter {
-            $0.receiver == selectedUser.userId || ($0.userId == selectedUser.userId && $0.seen == true)
+    func markMessagesAsSeen(messages: [Message]) {
+        if messages.isEmpty {
+            return
         }
-        return seenMessages
-    }
-    
-    func getUnseenMessages(selectedUser: AppUser) -> [Message] {
-        let unseenMessages = self.messages.filter {
-            $0.userId == selectedUser.userId && $0.seen == false
+        for message in messages {
+            self.db.collection("messages").document(message.receiver).collection(message.receiver).document(message.id.uuidString).updateData(["seen": true])
         }
-        return unseenMessages
     }
-    
-    func markMessageAsSeen(message: Message) {
-        var message = message
-        message.seen = true
-        do {
-//            try db.collection("messages").document(message.receiver).collection(message.receiver).document(message.id.uuidString).setData(from: message)
-            db.collection("messages").document(message.receiver).collection(message.receiver).document(message.id.uuidString).updateData(["seen": true])
-            
-//            try db.collection("messages").document(message.userId).collection(message.userId).document(message.id.uuidString).setData(from: message)
-            db.collection("messages").document(message.userId).collection(message.userId).document(message.id.uuidString).updateData(["seen" : true])
-        }
-//        catch {
-//            print("mark message as seen error")
-//            print(error.localizedDescription)
-//        }
-    }
-    
+}
+
+enum AppView: Hashable {
+    case users
+    case contacts
+    case messages
 }
 

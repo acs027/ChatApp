@@ -52,12 +52,19 @@ struct AuthenticatedView<Content, Unauthenticated>: View where Content: View, Un
                     .environmentObject(viewModel)
             }
         case .authenticated:
-            VStack {
+            ZStack {
                 content()
-                Text("You're logged in as \(viewModel.email)")
-                Button("Tap here to view your profile") {
-                    presentingProfileScreen.toggle()
+                HStack {
+                    Button {
+                        presentingProfileScreen.toggle()
+                    } label: {
+                            UserAvatar(user: viewModel.appUser, size: 45)
+                    }
+                    .foregroundStyle(.primary)
+                    Spacer()
                 }
+                .frame(maxHeight: .infinity, alignment: .bottom)
+                .padding()
             }
             .sheet(isPresented: $presentingProfileScreen) {
                 NavigationStack {

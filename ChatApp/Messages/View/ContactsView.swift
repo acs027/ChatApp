@@ -8,44 +8,70 @@
 import SwiftUI
 
 struct ContactsView: View {
-    @EnvironmentObject var viewModel: MessageViewModel
-    @State var selectedUser = AppUser.empty
-    @Binding var showingContacs: Bool
-    @State var showingMessages = false
+    @ObservedObject var viewModel: MessageViewModel
+    @State private var searchString = ""
     
-    var allContacts: [AppUser] {
-        return viewModel.currentUser.contactList.compactMap { user in
-            viewModel.allUsers.first(where: { $0.userId == user })
-        }
+    private var allContacts: [AppUser] {
+        viewModel.getContacts()
+    }
+    
+    private var filteredContacts: [AppUser] {
+        viewModel.filterContacts(searchString: searchString, contacts: allContacts)
     }
     
     var body: some View {
         VStack{
+            ZStack{
+                RoundedRectangle(cornerRadius: 100.0)
+                    .fill(.secondary)
+                HStack{
+                    Image(systemName: "magnifyingglass")
+                    TextField("", text: $searchString)
+                }
+                .padding()
+            }
+            .frame(height: 20)
+            .padding()
             ScrollView(showsIndicators: false){
-                ForEach(allContacts, id:\.userId) { contact in
+                ForEach(filteredContacts, id:\.userId) { contact in
                     HStack {
                         UserAvatar(user: contact, size: 50)
-                        VStack {
-                            Text(contact.displayName.capitalized)
-                                .bold()
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
+                        Text(contact.displayName.capitalized)
+                            .bold()
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .padding()
-                    .frame(maxWidth: .infinity)
                     .frame(height: 50)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        self.selectedUser = contact
-                        self.showingMessages.toggle()
+                        viewModel.selectedUser = contact
+                        viewModel.viewPath.append(.messages)
                     }
                 }
             }
-            .navigationDestination(isPresented: $showingMessages) {
-                MessagesView(selectedUser: selectedUser, showingMessages: $showingContacs)
-                    .environmentObject(viewModel)
+        }
+        .padding(.vertical)
+        .frame(maxHeight: .infinity, alignment: .topLeading)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    viewModel.viewPath.removeLast()
+                } label: {
+                    Image(systemName: "chevron.left")
+                }
+                .foregroundStyle(.primary)
             }
         }
-        .frame(maxHeight: .infinity, alignment: .topLeading)
+        .navigationBarBackButtonHidden()
+        .navigationTitle("Contacts")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.visible, for: .automatic)
+        .toolbarBackground(.green1, for: .automatic)
+    }
+}
+
+#Preview {
+    NavigationStack {
+        ContactsView(viewModel: MessageViewModel(test: true))
     }
 }
