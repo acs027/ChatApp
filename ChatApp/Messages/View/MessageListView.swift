@@ -9,6 +9,8 @@ import SwiftUI
 
 struct MessageListView: View {
     @ObservedObject var viewModel: MessageViewModel
+    @State private var showingAlert = false
+    @State private var selectedUser = AppUser.empty
     
     var body: some View {
         VStack {
@@ -28,7 +30,8 @@ struct MessageListView: View {
                         }
                         .contextMenu(ContextMenu(menuItems: {
                             Button(role: .destructive) {
-                                viewModel.removeMessages(selectedUser: user)
+                                selectedUser = user
+                                showingAlert.toggle()
                             } label: {
                                 HStack {
                                     Text("Delete Messages")
@@ -36,9 +39,17 @@ struct MessageListView: View {
                                 }
                             }
                         }))
+                        .alert("Delete messages?", isPresented: $showingAlert) {
+                            Button(role: .destructive) {
+                                withAnimation {
+                                    self.viewModel.deleteMessages(selectedUser: selectedUser)
+                                }
+                            } label: {
+                                Text("Delete")
+                            }
+                        }
                     }
                 }
-//                .frame(maxHeight: .infinity, alignment: .topLeading)
             }            
             Button {
                 viewModel.viewPath.append(.contacts)
