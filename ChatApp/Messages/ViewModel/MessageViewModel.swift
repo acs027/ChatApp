@@ -116,16 +116,6 @@ final class MessageViewModel: ObservableObject {
         }
     }
     
-    func removeMessages(selectedUser: AppUser) {
-        guard let uid = user?.uid else { return }
-        for message in self.messages {
-            if [uid, selectedUser.userId].allSatisfy([message.receiver, message.userId].contains) {
-                self.db.collection("messages").document(uid).collection(uid).document(message.id.uuidString).delete()
-                self.db.collection("messages").document(selectedUser.userId).collection(selectedUser.userId).document(message.id.uuidString).delete()
-            }
-        }
-    }
-    
     func getUser() {
         guard let uid = user?.uid else { return }
         let docRef = db.collection("users").document(uid)
@@ -158,6 +148,9 @@ final class MessageViewModel: ObservableObject {
         return self.currentUser.contactList.compactMap { user in
             self.allUsers.first(where: { $0.userId == user })
         }
+        .sorted{
+            $0.displayName.lowercased() < $1.displayName.lowercased()
+        }
     }
     
     func getSeenMessages(selectedUser: AppUser) -> [Message] {
@@ -180,6 +173,25 @@ final class MessageViewModel: ObservableObject {
             self.currentUser.contactList.append(userId)
             db.collection("users").document(uid).updateData(["contactList" : self.currentUser.contactList])
         }
+    }
+    
+    func deleteMessages(selectedUser: AppUser) {
+        guard let uid = user?.uid else { return }
+        for message in self.messages {
+            if [uid, selectedUser.userId].allSatisfy([message.receiver, message.userId].contains) {
+                self.db.collection("messages").document(uid).collection(uid).document(message.id.uuidString).delete()
+                self.db.collection("messages").document(selectedUser.userId).collection(selectedUser.userId).document(message.id.uuidString).delete()
+            }
+        }
+    }
+    
+    func deleteFromContacts(selectedUser: AppUser) {
+        guard let uid = user?.uid else { return }
+        self.currentUser.contactList.removeAll {
+            $0 == selectedUser.userId
+        }
+        db.collection("users").document(uid).updateData(["contactList" : self.currentUser.contactList])
+        deleteMessages(selectedUser: selectedUser)
     }
     
     func findLastMessage(selectedUser: AppUser) -> (Message, String) {

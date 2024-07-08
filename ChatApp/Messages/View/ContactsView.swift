@@ -10,6 +10,8 @@ import SwiftUI
 struct ContactsView: View {
     @ObservedObject var viewModel: MessageViewModel
     @State private var searchString = ""
+    @State private var showingAlert = false
+    @State private var selectedUser = AppUser.empty
     
     private var allContacts: [AppUser] {
         viewModel.getContacts()
@@ -46,6 +48,27 @@ struct ContactsView: View {
                     .onTapGesture {
                         viewModel.selectedUser = contact
                         viewModel.viewPath.append(.messages)
+                    }
+                    .contextMenu(ContextMenu(menuItems: {
+                        Button(role: .destructive) {
+                            selectedUser = contact
+                            showingAlert.toggle()
+                        } label: {
+                            HStack {
+                                Text("Delete Contact and Messages")
+                                Image(systemName: "trash")
+                            }
+                        }
+                    }))
+                    .alert("Delete \(selectedUser.displayName.capitalized)?", isPresented: $showingAlert) {
+                        Button(role: .destructive) {
+                            withAnimation {
+                                self.viewModel.deleteFromContacts(selectedUser: selectedUser)
+                            }
+                            
+                        } label: {
+                            Text("Delete")
+                        }
                     }
                 }
             }
